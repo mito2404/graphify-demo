@@ -3,7 +3,8 @@
 This file is loaded as system context for every Claude Code session in this
 repository, including sessions started by Routines. Part 1 is the source
 content, kept verbatim. Part 2 turns each item of Part 1 into directives that
-Claude must execute.
+Claude must execute. Part 3 records lessons learned from earlier sessions and
+from how the repo owner works; it overrides Part 2 where they conflict.
 
 ## Part 1 — Source content (verbatim, do not edit)
 
@@ -150,3 +151,79 @@ Verification
   - render changed Markdown/pages and check they display correctly;
   - if any output does not match the doc, fix the doc (or report the mismatch)
     before opening the PR. Report results faithfully in the PR description.
+
+## Part 3 — Lessons learned (from session memory and owner behavior)
+
+Evidence: session `session_01PdD9ibbX7RKHZFUunzEsb7` (2026-11-13), routine
+state from `list_triggers` and PR list on 2026-11-14. Items marked
+*(unverified)* were never confirmed; do not state them as fact.
+
+### 3.1 How the owner works — do this
+
+- **Language and tone:** reply in Vietnamese by default, short and direct. The
+  owner writes short imperative requests ("... giúp mình"); act on them without
+  extra confirmation unless the decision is genuinely theirs.
+- **Truthfulness:** never invent information or fill gaps; label anything
+  unverified; cite the direct source (tool result, file path, PR, session).
+  Review the answer before sending.
+- **Verbatim means verbatim:** when the owner says to keep source content as is
+  ("giữ nguyên gốc nội dung"), keep it byte-identical in its own section, put
+  the executable interpretation in a separate section, and confirm with `diff`.
+- **Set up → test-run → report:** after creating or changing anything
+  (routine, label, config, docs), the owner always asks to run it and check the
+  result. Do it proactively: run once, read the result, and report a table of
+  check item / ✅ or ❌ / detail, plus duration and cost when known.
+- **Verify the owner's "done":** when the owner says they fixed something in a
+  UI ("mình đã gắn/sửa/bật xong"), check the real state with tools before acting.
+  On 2026-11-13 09:39 the owner said the repo was attached but all three
+  routines still had an empty repo list; Claude reported that instead of running
+  a test that would fail.
+- **Offer a concrete workaround when a tool cannot do something**, and let the
+  owner pick (the owner chose "create a temporary issue" to create a label).
+- **Protect cost and noise:** if something will fail repeatedly (scheduled runs,
+  notifications), say so and offer to pause it. The owner asked to pause all
+  three routines until the repo was attached.
+- **Outward actions only on explicit request in the current turn:** merge,
+  enable/disable/fire a routine, create issues or labels. A PR is merged only
+  when the owner asks (PR #1 was merged on request; PR #3 was not).
+- **Clean up after yourself:** once a test result is read, delete the now
+  redundant `send_later` check-in; stop PR check-ins when nothing is left to do.
+- **Portability:** the owner also uses ChatGPT/Codex. `AGENTS.md` mirrors this
+  file for Codex (draft PR #3, not merged as of 2026-11-14). When this file
+  changes, say whether `AGENTS.md` needs the same change.
+
+### 3.2 Platform facts learned — rely on these
+
+- A routine created with `create_trigger` has **no repository and no
+  connectors**. Its run fails with HTTP 403 "GitHub access to this repository is
+  not enabled for this session". Fix: the owner opens claude.ai/code → Routines,
+  adds `mito2404/graphify-demo` with write access, and saves. After creating any
+  routine, fire one test run to confirm repo access before relying on it.
+- `create_trigger` cannot create GitHub-event triggers. The release and
+  `needs-docs` routines therefore poll daily and de-duplicate by PR title
+  (`docs: update for <tag>`, `docs: document #N`); latency is up to about a day.
+- `list_triggers` did not show the two routines the owner created in the UI on
+  2026-11-13; the cause is *(unverified)*.
+- The GitHub MCP tools here cannot create or edit labels. Workaround used:
+  create a temporary issue carrying the label (this creates the label), then
+  close the issue. The owner set the `needs-docs` description and color in the UI.
+- A test run of each routine took about 15–20 s and cost about 0.27–0.29 USD
+  (2026-11-13).
+
+Routine state on 2026-11-14 (all enabled, last run succeeded):
+
+| Routine | Schedule (Asia/Ho_Chi_Minh) |
+|---|---|
+| Weekly docs issue review | Monday 08:38 |
+| Daily release docs check | Daily 09:38 |
+| Daily needs-docs PR check | Daily 13:39 |
+
+### 3.3 Open decisions — ask the owner, do not act alone
+
+- **First release:** the release routine diffs against the previous tag; the
+  repo has no tags yet. Proposal (awaiting the owner): diff the first release
+  against the repository's first commit.
+- **PR #3 (`AGENTS.md`):** draft, awaiting the owner's merge decision.
+- **Weekly routine prompt** still mentions branch `claude/fervent-goldberg-snfjt3`
+  as a fallback for `CLAUDE.md`; that work is merged into `main`. Harmless while
+  the branch exists; propose removing the reference when the routine is next edited.
